@@ -76,16 +76,39 @@ async function runAxe(page: Page, label: string) {
 
 test.describe('accessibility', () => {
   test('demonstrate temporary regression fails a11y gate if allowlist entry is removed prematurely', async ({ page }) => {
-    // Temporary regression test verifying that injecting a disallowed rule violation (e.g. 'button-name')
+    // Temporary regression test verifying that injecting a disallowed rule violation
     // correctly causes runAxe to fail the accessibility gate as required by issue #528.
     await mockDashboardApi(page);
     await mintSession(page);
     await page.goto('/dashboard');
     await expect(page.getByRole('heading', { name: 'Settled Volume' })).toBeVisible();
-    
-    // Temporarily add a rule back to ALLOWLIST to prove checking works or simulate failure check
-    const originalAllowlistCount = Object.keys(ALLOWLIST).length;
-    expect(originalAllowlistCount).toBe(1);
+
+    // Force a violation by temporarily registering a rule that has active violations or testing failure emission
+    const originalAnalyze = AxeBuilder.prototype.analyze;
+    // @ts-expect-error mocking analyze output for temporary regression check
+    AxeBuilder.prototype.analyze = async function() {
+      return {
+        violations: [
+          {
+            id: 'button-name',
+            impact: 'serious',
+            help: 'Ensures buttons have discernible text',
+            nodes: [{ target: ['button.unlabeled'] }],
+          },
+        ],
+      };
+    };
+
+    try {
+      await runAxe(page, '/dashboard (regression check)');
+      throw new Error('Expected runAxe to fail on un-allowlisted violation');
+    } catch (err: unknown) {
+      const error = err as Error;
+      expect(error.message).toContain('Accessibility violations on /dashboard (regression check)');
+      expect(error.message).toContain('button-name');
+    } finally {
+      AxeBuilder.prototype.analyze = originalAnalyze;
+    }
   });
 
   test('/dashboard', async ({ page }) => {
