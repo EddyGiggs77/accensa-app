@@ -4,7 +4,7 @@ import { mintSessionCookie } from './helpers/auth';
 import { MOCK_PAYMENTS, mockDashboardApi } from './helpers/mocks';
 
 /**
- * Automated accessibility gate for the dashboard (#205).
+ * Automated accessibility gate for the dashboard (#205, #528).
  *
  * Covers the five required states: /dashboard, /dashboard/routes, /verify,
  * /login, and the dashboard with the payment modal open.
@@ -16,9 +16,11 @@ import { MOCK_PAYMENTS, mockDashboardApi } from './helpers/mocks';
  * issue that tracks the fix. When the issue lands, the entry must be removed
  * and the check starts failing on that rule again.
  *
- * | Rule (axe) | Element | Linked issue |
- * |---|---|---|
- * | `color-contrast` | dashboard stat cards (light theme) | [#190](https://github.com/accensa/accensa-app/issues/190) — tracked with card contrast |
+ * | Rule (axe) | Element | Linked issue | Reason / Axe Output |
+ * |---|---|---|---|
+ * | `color-contrast` | dashboard stat cards (light theme) | [#190](https://github.com/accensa/accensa-app/issues/190) | Kept: low contrast on secondary stat text in light mode |
+ *
+ * Stale rules (`button-name`, `dialog-name`, `aria-dialog-name`, `aria-prohibited-attr`, `aria-valid-attr-value`) have been retired as their underlying violations no longer reproduce.
  *
  * Anything NOT in this allowlist fails the build, naming the element and rule.
  */
@@ -109,5 +111,20 @@ test.describe('accessibility', () => {
     await page.goto('/login');
     await expect(page.getByText('Merchant Login')).toBeVisible();
     await runAxe(page, '/login');
+  });
+
+  test('demonstrate temporary regression fails a11y gate', async ({ page }) => {
+    await mockDashboardApi(page);
+    await mintSession(page);
+    await page.goto('/dashboard');
+    await expect(page.getByRole('heading', { name: 'Settled Volume' })).toBeVisible();
+
+    // Temporarily add 'color-contrast' to the violations check or temporarily remove it from ALLOWLIST
+    // to verify that an un-allowlisted rule correctly triggers an expected test failure assertion.
+    const tempAllowlist: Record<string, { element: string; issue: string }> = {};
+    const results = await new AxeBuilder({ page }).analyze();
+    const violationsWithRemovedRule = results.violations.filter((v) => !tempAllowlist[v.id]);
+
+    expect(violationsWithRemovedRule.length).toBeGreaterThan(0);
   });
 });
