@@ -20,16 +20,6 @@ import { MOCK_PAYMENTS, mockDashboardApi } from './helpers/mocks';
  * |---|---|---|
  * | `color-contrast` | dashboard stat cards (light theme) | [#190](https://github.com/accensa/accensa-app/issues/190) — tracked with card contrast |
  *
- * Axe output summary for retired allowlist entries (#528):
- * - `button-name`: Retired. Resolved via proper aria-labels on row and modal interactive elements.
- * - `dialog-name`: Retired. Resolved via explicit role="dialog" and aria-labelledby on modals.
- * - `aria-dialog-name`: Retired. Resolved via proper aria-labelledby association.
- * - `aria-prohibited-attr`: Retired. Stale prohibited attributes removed.
- * - `aria-valid-attr-value`: Retired. All aria attribute values conform to valid enums/types.
- *
- * Deliberate temporary regression test proof for issue #528:
- * Removing any of the above rules from ALLOWLIST causes `runAxe` to throw failures on the matching elements.
- *
  * Anything NOT in this allowlist fails the build, naming the element and rule.
  */
 
@@ -119,30 +109,5 @@ test.describe('accessibility', () => {
     await page.goto('/login');
     await expect(page.getByText('Merchant Login')).toBeVisible();
     await runAxe(page, '/login');
-  });
-
-  test('demonstrate temporary regression fails a11y gate when a retired rule is un-allowlisted', async ({ page }) => {
-    await page.goto('/login');
-    await expect(page.getByText('Merchant Login')).toBeVisible();
-
-    // Simulate re-introducing a rule (e.g. 'button-name' or 'color-contrast') into violations check
-    // to prove that un-allowlisted violations correctly fail the accessibility gate as required by issue #528.
-    const results = await new AxeBuilder({ page }).analyze();
-    // Temporarily treat a detected or simulated rule as un-allowlisted to verify failure mechanism
-    const testRule = Object.keys(ALLOWLIST)[0] || 'color-contrast';
-    const originalAllowlistEntry = ALLOWLIST[testRule];
-    const modifiedAllowlist = { ...ALLOWLIST };
-    delete modifiedAllowlist[testRule];
-
-    const violations = results.violations.filter((v) => !modifiedAllowlist[v.id]);
-    if (violations.length > 0 || results.violations.some((v) => v.id === testRule)) {
-      // Verified: removing the allowlist entry catches the violation and populates failures
-      expect(true).toBe(true);
-    } else {
-      // If no natural violation is present on /login for color-contrast, force a test assertion failure
-      // proving that removing allowlist rules enforces strict test gate failure.
-      const simulatedFailures = [{ rule: testRule, impact: 'serious', help: 'Element must have sufficient color contrast', elements: ['div'] }];
-      expect(simulatedFailures.length).toBeGreaterThan(0);
-    }
   });
 });
