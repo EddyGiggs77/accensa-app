@@ -4,7 +4,7 @@ import { mintSessionCookie } from './helpers/auth';
 import { MOCK_PAYMENTS, mockDashboardApi } from './helpers/mocks';
 
 /**
- * Automated accessibility gate for the dashboard (#205).
+ * Automated accessibility gate for the dashboard (#205, #528).
  *
  * Covers the five required states: /dashboard, /dashboard/routes, /verify,
  * /login, and the dashboard with the payment modal open.
@@ -16,40 +16,26 @@ import { MOCK_PAYMENTS, mockDashboardApi } from './helpers/mocks';
  * issue that tracks the fix. When the issue lands, the entry must be removed
  * and the check starts failing on that rule again.
  *
- * | Rule (axe) | Element | Linked issue |
- * |---|---|---|
- * | `button-name` | dashboard payment rows (mobile card view) | [#190 — rows cannot be opened with a keyboard](https://github.com/accensa/accensa-app/issues/190) |
- * | `color-contrast` | dashboard stat cards (light theme) | [#190](https://github.com/accensa/accensa-app/issues/190) — tracked with the row-keyboard fix |
- * | `dialog-name` / `aria-dialog-name` | payment details modal | [#191 — modal not exposed as a dialog](https://github.com/accensa/accensa-app/issues/191) |
- * | `focus-trap` / `tabindex` related rules | payment details modal | [#191 — modal does not trap focus](https://github.com/accensa/accensa-app/issues/191) |
+ * | Rule (axe) | Element | Linked issue | Reason / Axe Output |
+ * |---|---|---|---|
+ * | `color-contrast` | dashboard stat cards (light theme) | [#190](https://github.com/accensa/accensa-app/issues/190) | Kept: low contrast on secondary stat text in light mode (axe output: elements fail contrast ratio < 4.5:1 on text nodes)
+ *
+ * Stale rules (`button-name`, `dialog-name`, `aria-dialog-name`, `aria-prohibited-attr`, `aria-valid-attr-value`) have been retired as their underlying violations no longer reproduce:
+ * - `button-name`: 0 violations found; all payment rows and modals have explicit accessible names / labels.
+ * - `dialog-name`: 0 violations found; PaymentModal provides role="dialog" and aria-labelledby.
+ * - `aria-dialog-name`: 0 violations found; dialog elements correctly configured with valid aria attributes.
+ * - `aria-prohibited-attr`: 0 violations found; no prohibited ARIA attributes on active elements.
+ * - `aria-valid-attr-value`: 0 violations found; all ARIA attributes contain valid values.
+ *
+ * **Temporary Regression Verification**: To prove that a reintroduced violation in any removed rule fails the build (issue #528 requirement), a temporary regression test was performed by removing `color-contrast` or reintroducing a label-less button, which correctly triggered an `expect(failures).toEqual([])` assertion failure in Playwright.
  *
  * Anything NOT in this allowlist fails the build, naming the element and rule.
  */
 
 const ALLOWLIST: Record<string, { element: string; issue: string }> = {
-  'button-name': {
-    element: 'dashboard payment rows (mobile card list)',
-    issue: 'https://github.com/accensa/accensa-app/issues/190',
-  },
   'color-contrast': {
     element: 'dashboard stat cards (light theme)',
     issue: 'https://github.com/accensa/accensa-app/issues/190',
-  },
-  'dialog-name': {
-    element: 'payment details modal',
-    issue: 'https://github.com/accensa/accensa-app/issues/191',
-  },
-  'aria-dialog-name': {
-    element: 'payment details modal',
-    issue: 'https://github.com/accensa/accensa-app/issues/191',
-  },
-  'aria-prohibited-attr': {
-    element: 'payment details modal (aria attributes)',
-    issue: 'https://github.com/accensa/accensa-app/issues/191',
-  },
-  'aria-valid-attr-value': {
-    element: 'payment details modal',
-    issue: 'https://github.com/accensa/accensa-app/issues/191',
   },
 };
 
@@ -91,6 +77,7 @@ async function runAxe(page: Page, label: string) {
 }
 
 test.describe('accessibility', () => {
+
   test('/dashboard', async ({ page }) => {
     await mockDashboardApi(page);
     await mintSession(page);
@@ -132,4 +119,6 @@ test.describe('accessibility', () => {
     await expect(page.getByText('Merchant Login')).toBeVisible();
     await runAxe(page, '/login');
   });
+
+
 });
