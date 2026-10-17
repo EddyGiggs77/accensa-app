@@ -20,12 +20,12 @@ import { MOCK_PAYMENTS, mockDashboardApi } from './helpers/mocks';
  * |---|---|---|
  * | `color-contrast` | dashboard stat cards (light theme) | [#190](https://github.com/accensa/accensa-app/issues/190) — tracked with card contrast |
  *
- * Axe output summary for retired allowlist entries:
- * - `button-name`: Resolved (payment action buttons and row elements carry proper aria-labels).
- * - `dialog-name`: Resolved (payment details modal has aria-labelledby and role="dialog").
- * - `aria-dialog-name`: Resolved (modal role="dialog" correctly associates with its heading).
- * - `aria-prohibited-attr`: Resolved (stale prohibited attributes cleaned up).
- * - `aria-valid-attr-value`: Resolved (all aria attribute values conform to valid enums/types).
+ * Axe output summary for retired allowlist entries (#528):
+ * - `button-name`: Retired. Resolved via proper aria-labels on row and modal interactive elements.
+ * - `dialog-name`: Retired. Resolved via explicit role="dialog" and aria-labelledby on modals.
+ * - `aria-dialog-name`: Retired. Resolved via proper aria-labelledby association.
+ * - `aria-prohibited-attr`: Retired. Stale prohibited attributes removed.
+ * - `aria-valid-attr-value`: Retired. All aria attribute values conform to valid enums/types.
  *
  * Anything NOT in this allowlist fails the build, naming the element and rule.
  */
@@ -75,41 +75,6 @@ async function runAxe(page: Page, label: string) {
 }
 
 test.describe('accessibility', () => {
-  test('demonstrate temporary regression fails a11y gate if allowlist entry is removed prematurely', async ({ page }) => {
-    // Temporary regression test verifying that injecting a disallowed rule violation
-    // correctly causes runAxe to fail the accessibility gate as required by issue #528.
-    await mockDashboardApi(page);
-    await mintSession(page);
-    await page.goto('/dashboard');
-    await expect(page.getByRole('heading', { name: 'Settled Volume' })).toBeVisible();
-
-    // Force a violation by temporarily registering a rule that has active violations or testing failure emission
-    const originalAnalyze = AxeBuilder.prototype.analyze;
-    // @ts-expect-error mocking analyze output for temporary regression check
-    AxeBuilder.prototype.analyze = async function() {
-      return {
-        violations: [
-          {
-            id: 'button-name',
-            impact: 'serious',
-            help: 'Ensures buttons have discernible text',
-            nodes: [{ target: ['button.unlabeled'] }],
-          },
-        ],
-      };
-    };
-
-    try {
-      await runAxe(page, '/dashboard (regression check)');
-      throw new Error('Expected runAxe to fail on un-allowlisted violation');
-    } catch (err: unknown) {
-      const error = err as Error;
-      expect(error.message).toContain('Accessibility violations on /dashboard (regression check)');
-      expect(error.message).toContain('button-name');
-    } finally {
-      AxeBuilder.prototype.analyze = originalAnalyze;
-    }
-  });
 
   test('/dashboard', async ({ page }) => {
     await mockDashboardApi(page);
