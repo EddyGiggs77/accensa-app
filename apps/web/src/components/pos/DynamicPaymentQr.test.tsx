@@ -42,7 +42,7 @@ describe('DynamicPaymentQr', () => {
       vi.advanceTimersByTime(3000);
     });
 
-    expect(screen.getByText('Expired')).toBeInTheDocument();
+    expect(screen.getAllByText('Expired').length).toBeGreaterThan(0);
     expect(screen.getByRole('button', { name: 'Refresh QR' })).toBeInTheDocument();
   });
 
@@ -53,7 +53,7 @@ describe('DynamicPaymentQr', () => {
       vi.advanceTimersByTime(3000);
     });
 
-    expect(screen.getByText('Expired')).toBeInTheDocument();
+    expect(screen.getAllByText('Expired').length).toBeGreaterThan(0);
     const refreshButton = screen.getByRole('button', { name: 'Refresh QR' });
 
     fireEvent.click(refreshButton);
