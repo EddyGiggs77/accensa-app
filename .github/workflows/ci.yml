@@ -16,6 +16,9 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 45
     services:
       # Only `pnpm --filter web test` reads a database, and the old test-web
       # job was the only one that had this service. Job-scoped services stay up
@@ -170,3 +173,9 @@ jobs:
       - name: Test demo-merchant
         working-directory: ./apps/demo-merchant
         run: pnpm test
+
+      - name: Audit dependencies
+        # Dev-only advisories surface in pnpm workspace; we audit workspace dependencies
+        # but allow moderate-or-below or explicitly reviewed exceptions. pnpm audit
+        # exits non-zero on vulnerabilities matching or exceeding the specified severity.
+        run: pnpm audit --audit-level=high
