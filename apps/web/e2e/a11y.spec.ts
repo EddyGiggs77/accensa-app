@@ -18,38 +18,15 @@ import { MOCK_PAYMENTS, mockDashboardApi } from './helpers/mocks';
  *
  * | Rule (axe) | Element | Linked issue |
  * |---|---|---|
- * | `button-name` | dashboard payment rows (mobile card view) | [#190 — rows cannot be opened with a keyboard](https://github.com/accensa/accensa-app/issues/190) |
- * | `color-contrast` | dashboard stat cards (light theme) | [#190](https://github.com/accensa/accensa-app/issues/190) — tracked with the row-keyboard fix |
- * | `dialog-name` / `aria-dialog-name` | payment details modal | [#191 — modal not exposed as a dialog](https://github.com/accensa/accensa-app/issues/191) |
- * | `focus-trap` / `tabindex` related rules | payment details modal | [#191 — modal does not trap focus](https://github.com/accensa/accensa-app/issues/191) |
+ * | `color-contrast` | dashboard stat cards (light theme) | [#190](https://github.com/accensa/accensa-app/issues/190) — tracked with card contrast |
  *
  * Anything NOT in this allowlist fails the build, naming the element and rule.
  */
 
 const ALLOWLIST: Record<string, { element: string; issue: string }> = {
-  'button-name': {
-    element: 'dashboard payment rows (mobile card list)',
-    issue: 'https://github.com/accensa/accensa-app/issues/190',
-  },
   'color-contrast': {
     element: 'dashboard stat cards (light theme)',
     issue: 'https://github.com/accensa/accensa-app/issues/190',
-  },
-  'dialog-name': {
-    element: 'payment details modal',
-    issue: 'https://github.com/accensa/accensa-app/issues/191',
-  },
-  'aria-dialog-name': {
-    element: 'payment details modal',
-    issue: 'https://github.com/accensa/accensa-app/issues/191',
-  },
-  'aria-prohibited-attr': {
-    element: 'payment details modal (aria attributes)',
-    issue: 'https://github.com/accensa/accensa-app/issues/191',
-  },
-  'aria-valid-attr-value': {
-    element: 'payment details modal',
-    issue: 'https://github.com/accensa/accensa-app/issues/191',
   },
 };
 
@@ -91,6 +68,7 @@ async function runAxe(page: Page, label: string) {
 }
 
 test.describe('accessibility', () => {
+
   test('/dashboard', async ({ page }) => {
     await mockDashboardApi(page);
     await mintSession(page);
