@@ -16,6 +16,9 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 45
     services:
       # Only `pnpm --filter web test` reads a database, and the old test-web
       # job was the only one that had this service. Job-scoped services stay up
@@ -170,3 +173,7 @@ jobs:
       - name: Test demo-merchant
         working-directory: ./apps/demo-merchant
         run: pnpm test
+
+      - name: Audit workspace dependencies
+        # Dev-only advisories are included in workspace audit results. Policy: moderate and above vulnerabilities block PR merge.
+        run: pnpm audit --audit-level moderate
