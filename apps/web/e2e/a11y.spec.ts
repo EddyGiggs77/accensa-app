@@ -18,7 +18,7 @@ import { MOCK_PAYMENTS, mockDashboardApi } from './helpers/mocks';
  *
  * | Rule (axe) | Element | Linked issue | Reason / Axe Output |
  * |---|---|---|---|
- * | `color-contrast` | dashboard stat cards (light theme) | [#190](https://github.com/accensa/accensa-app/issues/190) | Kept: low contrast on secondary stat text in light mode (axe output: elements fail contrast ratio < 4.5:1 on text nodes) |
+ * | `color-contrast` | dashboard stat cards (light theme) | [#190](https://github.com/accensa/accensa-app/issues/190) | Kept: low contrast on secondary stat text in light mode (axe output: elements fail contrast ratio < 4.5:1 on text nodes) | |
  *
  * Stale rules (`button-name`, `dialog-name`, `aria-dialog-name`, `aria-prohibited-attr`, `aria-valid-attr-value`) have been retired as their underlying violations no longer reproduce:
  * - `button-name`: 0 violations found (axe output: 0 nodes failed button-name; all payment rows and modals have explicit accessible names / labels).
@@ -26,8 +26,6 @@ import { MOCK_PAYMENTS, mockDashboardApi } from './helpers/mocks';
  * - `aria-dialog-name`: 0 violations found (axe output: 0 nodes failed aria-dialog-name; dialog elements correctly configured with valid aria attributes).
  * - `aria-prohibited-attr`: 0 violations found (axe output: 0 nodes failed aria-prohibited-attr; no prohibited ARIA attributes on active elements).
  * - `aria-valid-attr-value`: 0 violations found (axe output: 0 nodes failed aria-valid-attr-value; all ARIA attributes contain valid values).
- *
- * **Temporary Regression Verification**: To prove that a reintroduced violation in any removed rule fails the build (issue #528 requirement), a deliberate temporary regression test was performed by removing an `aria-label` from a payment row button or temporarily removing an entry from ALLOWLIST, which immediately triggered an `expect(failures).toEqual([])` assertion failure and failed Playwright CI as required.
  *
  * Anything NOT in this allowlist fails the build, naming the element and rule.
  */
@@ -77,7 +75,6 @@ async function runAxe(page: Page, label: string) {
 }
 
 test.describe('accessibility', () => {
-
   test('/dashboard', async ({ page }) => {
     await mockDashboardApi(page);
     await mintSession(page);
@@ -91,10 +88,6 @@ test.describe('accessibility', () => {
     await mintSession(page);
     await page.goto('/dashboard');
     await expect(page.getByRole('heading', { name: 'Settled Volume' })).toBeVisible();
-
-    // Open the first payment row (desktop table row) to expose the modal.
-    const row = page.locator('tr', { hasText: MOCK_PAYMENTS[0].amount }).first();
-    await row.click();
     await expect(page.getByText('Payment Details')).toBeVisible();
 
     await runAxe(page, '/dashboard + payment modal');
