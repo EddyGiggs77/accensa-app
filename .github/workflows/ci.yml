@@ -15,6 +15,7 @@ on:
 # weakened: each `run` is the same command the removed job ran.
 jobs:
   ci:
+    name: CI
     runs-on: ubuntu-latest
     permissions:
       contents: read
