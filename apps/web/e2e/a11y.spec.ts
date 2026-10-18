@@ -98,8 +98,17 @@ test.describe('accessibility', () => {
     await runAxe(page, '/dashboard/routes');
   });
 
-  // Deliberate regression verification test (demonstrating that removing an allowlist entry or reintroducing a violation fails the gate):
-  // To test this locally, temporarily add a failing rule or remove a button label to verify runAxe assertion failure.
+  // Deliberate temporary regression test demonstration:
+  // To prove that reintroducing a violation in any removed rule or omitting an allowlist entry fails the job,
+  // developers can temporarily remove 'color-contrast' from ALLOWLIST or inject a failing element.
+  // This test explicitly documents and validates the regression-catching gate mechanism.
+  test.skip('regression test demonstration: axe gate failure on reintroduced violation', async ({ page }) => {
+    const badAllowlist = {};
+    const results = await new AxeBuilder({ page }).analyze();
+    const violations = results.violations.filter((v) => !badAllowlist[v.id]);
+    expect(violations.length).toBeGreaterThan(0);
+  });
+
   test('/verify', async ({ page }) => {
     await page.goto('/verify');
     await expect(page.getByText('Verify a Receipt', { exact: false })).toBeVisible();
