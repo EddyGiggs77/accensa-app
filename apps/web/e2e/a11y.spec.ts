@@ -19,6 +19,7 @@ import { MOCK_PAYMENTS, mockDashboardApi } from './helpers/mocks';
  * | Rule (axe) | Element | Linked issue | Reason / Axe Output |
  * |---|---|---|---|
  * | `color-contrast` | dashboard stat cards (light theme) | [#190](https://github.com/accensa/accensa-app/issues/190) | Kept: low contrast on secondary stat text in light mode (axe output: elements fail contrast ratio < 4.5:1 on text nodes) |
+ *
  * Anything NOT in this allowlist fails the build, naming the element and rule.
  */
 
