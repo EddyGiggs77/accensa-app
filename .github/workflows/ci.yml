@@ -170,3 +170,9 @@ jobs:
       - name: Test demo-merchant
         working-directory: ./apps/demo-merchant
         run: pnpm test
+
+      - name: Audit workspace dependencies
+        # Dev-dependency audit policy: dev-only advisories are intentionally included
+        # and gate CI alongside production dependencies at the moderate threshold.
+        # Review date: 2026-06-01. Reason: ensure no unmitigated moderate+ vulns enter release chain.
+        run: pnpm audit --audit-level moderate
