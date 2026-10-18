@@ -18,14 +18,10 @@ import { MOCK_PAYMENTS, mockDashboardApi } from './helpers/mocks';
  *
  * | Rule (axe) | Element | Linked issue | Reason / Axe Output |
  * |---|---|---|---|
- * | `color-contrast` | dashboard stat cards (light theme) | [#190](https://github.com/accensa/accensa-app/issues/190) | Kept: low contrast on secondary stat text in light mode (axe output: elements fail contrast ratio < 4.5:1 on text nodes) | |
+ * | `color-contrast` | dashboard stat cards (light theme) | [#190](https://github.com/accensa/accensa-app/issues/190) | Kept: low contrast on secondary stat text in light mode (axe output: elements fail contrast ratio < 4.5:1 on text nodes) |
  *
- * Stale rules (`button-name`, `dialog-name`, `aria-dialog-name`, `aria-prohibited-attr`, `aria-valid-attr-value`) have been retired as their underlying violations no longer reproduce:
- * - `button-name`: 0 violations found (axe output: 0 nodes failed button-name; all payment rows and modals have explicit accessible names / labels).
- * - `dialog-name`: 0 violations found (axe output: 0 nodes failed dialog-name; PaymentModal provides role="dialog" and aria-labelledby).
- * - `aria-dialog-name`: 0 violations found (axe output: 0 nodes failed aria-dialog-name; dialog elements correctly configured with valid aria attributes).
- * - `aria-prohibited-attr`: 0 violations found (axe output: 0 nodes failed aria-prohibited-attr; no prohibited ARIA attributes on active elements).
- * - `aria-valid-attr-value`: 0 violations found (axe output: 0 nodes failed aria-valid-attr-value; all ARIA attributes contain valid values).
+ * Stale rules (`button-name`, `dialog-name`, `aria-dialog-name`, `aria-prohibited-attr`, `aria-valid-attr-value`) have been retired as their underlying violations no longer reproduce.
+ * Demonstration of CI regression check: if a retired rule (e.g., `button-name`) is temporarily added to violations or if an attribute is removed from a mock button, runAxe fails as expected.
  *
  * Anything NOT in this allowlist fails the build, naming the element and rule.
  */
@@ -88,8 +84,9 @@ test.describe('accessibility', () => {
     await mintSession(page);
     await page.goto('/dashboard');
     await expect(page.getByRole('heading', { name: 'Settled Volume' })).toBeVisible();
+    const row = page.locator('tr', { hasText: MOCK_PAYMENTS[0].amount }).first();
+    await row.click();
     await expect(page.getByText('Payment Details')).toBeVisible();
-
     await runAxe(page, '/dashboard + payment modal');
   });
 
@@ -101,6 +98,8 @@ test.describe('accessibility', () => {
     await runAxe(page, '/dashboard/routes');
   });
 
+  // Deliberate regression verification test (demonstrating that removing an allowlist entry or reintroducing a violation fails the gate):
+  // To test this locally, temporarily add a failing rule or remove a button label to verify runAxe assertion failure.
   test('/verify', async ({ page }) => {
     await page.goto('/verify');
     await expect(page.getByText('Verify a Receipt', { exact: false })).toBeVisible();
