@@ -95,7 +95,6 @@ test.describe('accessibility', () => {
     await runAxe(page, '/dashboard/routes');
   });
 
-
   test('/verify', async ({ page }) => {
     await page.goto('/verify');
     await expect(page.getByText('Verify a Receipt', { exact: false })).toBeVisible();
