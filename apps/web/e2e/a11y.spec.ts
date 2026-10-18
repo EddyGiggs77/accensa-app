@@ -68,12 +68,15 @@ async function runAxe(page: Page, label: string) {
 }
 
 test.describe('accessibility', () => {
-  test('/dashboard', async ({ page }) => {
+  test('/dashboard with payment modal open', async ({ page }) => {
     await mockDashboardApi(page);
     await mintSession(page);
     await page.goto('/dashboard');
     await expect(page.getByRole('heading', { name: 'Settled Volume' })).toBeVisible();
-    await runAxe(page, '/dashboard');
+    const row = page.locator('tr', { hasText: MOCK_PAYMENTS[0].amount }).first();
+    await row.click();
+    await expect(page.getByText('Payment Details')).toBeVisible();
+    await runAxe(page, '/dashboard + payment modal');
   });
 
   test('/dashboard with payment modal open', async ({ page }) => {
