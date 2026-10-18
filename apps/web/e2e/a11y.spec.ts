@@ -19,10 +19,6 @@ import { MOCK_PAYMENTS, mockDashboardApi } from './helpers/mocks';
  * | Rule (axe) | Element | Linked issue | Reason / Axe Output |
  * |---|---|---|---|
  * | `color-contrast` | dashboard stat cards (light theme) | [#190](https://github.com/accensa/accensa-app/issues/190) | Kept: low contrast on secondary stat text in light mode (axe output: elements fail contrast ratio < 4.5:1 on text nodes) |
- *
- * Stale rules (`button-name`, `dialog-name`, `aria-dialog-name`, `aria-prohibited-attr`, `aria-valid-attr-value`) have been retired as their underlying violations no longer reproduce.
- * Demonstration of CI regression check: if a retired rule (e.g., `button-name`) is temporarily added to violations or if an attribute is removed from a mock button, runAxe fails as expected.
- *
  * Anything NOT in this allowlist fails the build, naming the element and rule.
  */
 
@@ -110,6 +106,4 @@ test.describe('accessibility', () => {
     await expect(page.getByText('Merchant Login')).toBeVisible();
     await runAxe(page, '/login');
   });
-
-
 });
