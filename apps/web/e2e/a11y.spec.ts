@@ -68,15 +68,12 @@ async function runAxe(page: Page, label: string) {
 }
 
 test.describe('accessibility', () => {
-  test('/dashboard with payment modal open', async ({ page }) => {
+  test('/dashboard', async ({ page }) => {
     await mockDashboardApi(page);
     await mintSession(page);
     await page.goto('/dashboard');
     await expect(page.getByRole('heading', { name: 'Settled Volume' })).toBeVisible();
-    const row = page.locator('tr', { hasText: MOCK_PAYMENTS[0].amount }).first();
-    await row.click();
-    await expect(page.getByText('Payment Details')).toBeVisible();
-    await runAxe(page, '/dashboard + payment modal');
+    await runAxe(page, '/dashboard');
   });
 
   test('/dashboard with payment modal open', async ({ page }) => {
@@ -84,9 +81,12 @@ test.describe('accessibility', () => {
     await mintSession(page);
     await page.goto('/dashboard');
     await expect(page.getByRole('heading', { name: 'Settled Volume' })).toBeVisible();
+
+    // Open the first payment row (desktop table row) to expose the modal.
     const row = page.locator('tr', { hasText: MOCK_PAYMENTS[0].amount }).first();
     await row.click();
     await expect(page.getByText('Payment Details')).toBeVisible();
+
     await runAxe(page, '/dashboard + payment modal');
   });
 
