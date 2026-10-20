@@ -20,6 +20,8 @@ import { MOCK_PAYMENTS, mockDashboardApi } from './helpers/mocks';
  * |---|---|---|---|
  * | `color-contrast` | dashboard stat cards (light theme) | [#190](https://github.com/accensa/accensa-app/issues/190) | Kept: low contrast on secondary stat text in light mode (axe output: elements fail contrast ratio < 4.5:1 on text nodes) |
  *
+ * Note: Stale entries `button-name`, `dialog-name`, `aria-dialog-name`, `aria-prohibited-attr`, and `aria-valid-attr-value` have been retired per issue #528 as violations no longer reproduce.
+ *
  * Anything NOT in this allowlist fails the build, naming the element and rule.
  */
 
@@ -108,5 +110,28 @@ test.describe('accessibility', () => {
     await page.goto('/login');
     await expect(page.getByText('Merchant Login')).toBeVisible();
     await runAxe(page, '/login');
+  });
+
+  test('regression check demonstration: failing gate when allowlist rule is omitted', async ({ page }) => {
+    await mockDashboardApi(page);
+    await mintSession(page);
+    await page.goto('/dashboard');
+    await expect(page.getByRole('heading', { name: 'Settled Volume' })).toBeVisible();
+
+    // Temporarily remove 'color-contrast' from ALLOWLIST to prove that an active
+    // violation or unallowlisted rule correctly triggers test failure.
+    const originalAllowlist = { ...ALLOWLIST };
+    delete ALLOWLIST['color-contrast'];
+    try {
+      let failed = false;
+      try {
+        await runAxe(page, '/dashboard-regression-check');
+      } catch {
+        failed = true;
+      }
+      expect(failed).toBe(true);
+    } finally {
+      Object.assign(ALLOWLIST, originalAllowlist);
+    }
   });
 });
